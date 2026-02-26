@@ -5,25 +5,69 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cyber Math Bird</title>
 <style>
-html,body{margin:0;padding:0;overflow:hidden;font-family:Arial;background:black;color:white;}
-canvas{position:fixed;inset:0;}
-#score{position:fixed;top:20px;left:50%;transform:translateX(-50%);font-size:26px;text-shadow:0 0 12px #c77dff;}
-#questionBox{
-    position:fixed;inset:0;background:rgba(0,0,0,.92);
-    display:none;flex-direction:column;align-items:center;justify-content:center;
-    gap:14px;text-align:center;padding:20px;
+html,body{
+    margin:0;
+    padding:0;
+    overflow:hidden;
+    font-family:Arial, sans-serif;
+    background:black;
+    color:white;
 }
+
+canvas{position:fixed;inset:0;}
+
+#score{
+    position:fixed;
+    top:20px;
+    left:50%;
+    transform:translateX(-50%);
+    font-size:30px;
+    text-shadow:0 0 14px #c77dff;
+    z-index:5;
+}
+
+#questionBox{
+    position:fixed;
+    top:10%;
+    left:50%;
+    transform:translateX(-50%);
+    width:400px;
+    background:rgba(0,0,0,0.9);
+    border-radius:15px;
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:16px;
+    text-align:center;
+    padding:24px;
+    z-index:10;
+}
+
 .choice{
-    background:#240046;padding:12px;border-radius:10px;width:240px;
-    box-shadow:0 0 12px #c77dff;margin:5px;cursor:pointer;
+    background:#240046;
+    padding:14px;
+    border-radius:12px;
+    width:100%;
+    box-shadow:0 0 14px #c77dff;
+    margin:6px 0;
+    cursor:pointer;
+    font-size:18px;
+    text-align:center;
 }
 .choice:hover{background:#3c096c;}
-.solution{font-size:14px;opacity:.85;max-width:320px;margin-top:8px;}
+.solution{
+    font-size:16px;
+    opacity:.85;
+    max-width:360px;
+    margin-top:8px;
+    white-space:pre-line;
+}
 </style>
 </head>
 <body>
 
-<!-- Video BG -->
+<!-- Video Background -->
 <video id="bgVideo" autoplay loop muted playsinline style="
     position:fixed;
     top:0; left:0;
@@ -49,7 +93,7 @@ canvas{position:fixed;inset:0;}
 const canvas=document.getElementById("game");
 const ctx=canvas.getContext("2d");
 resize(); window.onresize=resize;
-function resize(){ canvas.width=innerWidth; canvas.height=innerHeight; }
+function resize(){ canvas.width=innerWidth*1.3; canvas.height=innerHeight*1.3; }
 
 // SPRITES
 const birdFrames=[new Image(),new Image(),new Image()];
@@ -73,31 +117,26 @@ canvas.addEventListener("mousedown",jump);
 
 // PIPE GENERATION
 function addPipe(){
-    const top=Math.random()*(canvas.height-320)+40;
-    pipes.push({x:canvas.width, top});
+    const gap=200;
+    const minHeight=100;
+    const maxHeight=canvas.height-gap-100;
+    const top=Math.floor(Math.random()*(maxHeight-minHeight+1)+minHeight);
+    pipes.push({x:canvas.width, top:top, gap:gap});
 }
-setInterval(addPipe,2000);
+setInterval(addPipe,2200);
 
-// MATHEMATICS QUESTIONS (ÖRNEK 90+) 
+// QUESTIONS (90+ örnek, çoğaltabilirsiniz)
 const questions=[
     {q:"5 kalem 20 TL ise 8 kalem kaç TL?", choices:["30","32","40"], correct:1, solution:"5 kalem 20 TL → 1 kalem 4 TL → 8 kalem 8×4=32 TL"},
     {q:"3 işçi bir duvarı 9 günde örüyorsa 9 işçi kaç günde örer?", choices:["3","9","27"], correct:0, solution:"İşçi arttı → gün azalır: 3×9=27 → 9 işçi 27/9=3 gün"},
-    {q:"Otobüs 90 km/s hızla 4 saatte gidiyor. Aynı yolu 60 km/s ile kaç saatte gider?", choices:["4","6","8"], correct:1, solution:"90*4=360 km → 60 km/s → 360/60=6 saat"},
-    {q:"4 kg portakal 24 TL ise 7 kg kaç TL?", choices:["42","40","38"], correct:0, solution:"24/4=6 TL/kg → 7*6=42 TL"},
-    {q:"2 işçi 12 günde bitirirse 4 işçi kaç günde?", choices:["6","24","12"], correct:0, solution:"Ters orantı: işçi 2x→ gün yarı → 4 işçi 12/2=6 gün"},
-    {q:"Bir otobüs 90 km/s hızla 4 saatte gidiyor. Aynı yolu 60 km/s ile kaç saatte gider?", choices:["3","6","9"], correct:1, solution:"90*4=360 km → 60 km/s → 360/60=6 saat"},
-    {q:"5 kg elma 35 TL ise 8 kg kaç TL?", choices:["50","56","60"], correct:1, solution:"35/5=7 TL/kg → 8*7=56 TL"},
-    {q:"3 işçi 15 günde iş bitirirse 5 işçi kaç günde bitirir?", choices:["9","12","25"], correct:1, solution:"3*15=45 iş günü → 5 işçi 45/5=9 gün"},
-    {q:"6 kalem 18 TL ise 10 kalem kaç TL?", choices:["28","30","32"], correct:1, solution:"18/6=3 TL → 10*3=30 TL"},
-    {q:"9 işçi 6 günde iş bitiriyor, 3 işçi kaç günde bitirir?", choices:["12","18","6"], correct:1, solution:"Ters orantı: 9*6=54 → 3 işçi 54/3=18 gün"}
+    {q:"Otobüs 90 km/s hızla 4 saatte gidiyor. Aynı yolu 60 km/s ile kaç saatte gider?", choices:["4","6","8"], correct:1, solution:"90*4=360 km → 60 km/s → 360/60=6 saat"}
 ];
-
-// BİR 90+ soru ekleyecek şekilde çoğaltabilirsin...
+// 90+ soru üretmek için
 while(questions.length<90){
     let a=Math.floor(Math.random()*10+2);
     let b=Math.floor(Math.random()*10+2);
     let c=Math.floor(Math.random()*10+2);
-    questions.push({q:`${a} işçi ${b} günde yapıyorsa ${c} işçi kaç günde yapar?`, choices:[b,a+c,a*b], correct:0, solution:`Doğru orantı: işçi artarsa süre azalır. (${b}×${a})/${c}=${Math.round(b*a/c)}`});
+    questions.push({q:`${a} işçi ${b} günde yapıyorsa ${c} işçi kaç günde yapar?`, choices:[Math.round(b*a/c),Math.round(b*a/c)+1,Math.round(b*a/c)+2], correct:0, solution:`Doğru orantı: işçi artarsa süre azalır. (${b}×${a})/${c}=${Math.round(b*a/c)}`});
 }
 
 // ASK FUNCTION
@@ -116,7 +155,8 @@ function ask(){
         d.textContent=ans;
         d.onclick=()=>{
             if(i===q.correct){
-                qb.style.display="none"; running=true;
+                qb.style.display="none";
+                running=true;
             } else {
                 document.getElementById("solution").textContent=q.solution;
                 score=0;
@@ -136,30 +176,34 @@ function loop(){
     velocity+=0.6;
     birdY+=velocity;
 
-    // Bird frame
+    // BIRD FRAME SEÇİMİ
     let frame=0;
     if(velocity<-2) frame=1;
     else if(velocity>2) frame=2;
     ctx.drawImage(birdFrames[frame],80,birdY,SIZE,SIZE);
 
-    // Pipes
+    // PİPE ÇİZİMİ
     pipes.forEach(p=>{
         p.x-=3;
+        // Üst pipe
         ctx.drawImage(pipeImg,p.x,0,90,p.top);
-        ctx.drawImage(pipeImg,p.x,p.top+170,90,canvas.height);
+        // Alt pipe
+        ctx.drawImage(pipeImg,p.x,p.top+p.gap,90,canvas.height);
+        // Çarpışma kontrolü
         if(80>p.x && 80<p.x+90){
-            if(birdY<p.top || birdY>p.top+170) ask();
+            if(birdY<p.top || birdY>p.top+p.gap) ask();
         }
     });
+
+    // Pipe temizleme
     pipes=pipes.filter(p=>p.x>-120);
 
-    // Score
-    score+=0.01;
+    // Skor
+    score+=0.02;
     document.getElementById("score").textContent=Math.floor(score);
 }
-setInterval(addPipe,2000);
+setInterval(addPipe,2200);
 loop();
 </script>
-
 </body>
 </html>
