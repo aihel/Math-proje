@@ -1,0 +1,9 @@
+[
+{"q":"5 kalem 20 TL ise 8 kalem kaç TL? (Doğru Orantı)","correct":32,"solution":"5/20 = 8/x → x=32"},
+{"q":"3 işçi bir duvarı 9 günde örüyorsa 9 işçi kaç günde örer? (Ters Orantı)","correct":3,"solution":"3*9 = 9*x → x=3"},
+{"q":"Otobüs 90 km/s hızla 4 saatte gidiyor. Aynı yolu 60 km/s ile kaç saatte gider? (Ters Orantı)","correct":6,"solution":"90*4 = 60*x → x=6"},
+{"q":"4 kg portakal 24 TL ise 7 kg kaç TL? (Doğru Orantı)","correct":42,"solution":"4/24 = 7/x → x=42"},
+{"q":"2 işçi 12 günde bitirirse 4 işçi kaç günde? (Ters Orantı)","correct":6,"solution":"2*12 = 4*x → x=6"},
+{"q":"5 kg elma 35 TL ise 8 kg kaç TL? (Doğru Orantı)","correct":56,"solution":"5/35 = 8/x → x=56"},
+{"q":"3 işçi 15 günde iş bitirirse 5 işçi kaç günde? (Ters Orantı)","correct":9,"solution":"3*15 = 5*x → x=9"}
+]
