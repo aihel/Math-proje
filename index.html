@@ -3,18 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Matamatik ProjeBySansiAsaf</title>
+<title>Cyber Math Bird</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Audiowide&display=swap');
 
-html,body{margin:0;padding:0;overflow:hidden;font-family:'Orbitron', sans-serif;background:black;color:white;}
+html,body{margin:0;padding:0;overflow:hidden;font-family:'Audiowide', sans-serif;background:black;color:white;}
 canvas{position:fixed;inset:0;}
 #score{position:fixed;top:20px;left:50%;transform:translateX(-50%);font-size:35px;text-shadow:0 0 14px #c77dff;z-index:5;}
 #intro{
     position:fixed;inset:0;background:rgba(0,0,0,0.9);display:flex;
     align-items:center;justify-content:center;flex-direction:column;font-size:52px;
     color:#c77dff;text-shadow:0 0 20px #fff;z-index:15;opacity:1;
-    transition:opacity 1s ease;
+    transition:opacity 1s ease;text-align:center;
 }
 #questionBox{
     position:fixed;top:10%;left:50%;transform:translateX(-50%);
@@ -76,7 +76,7 @@ let pipeIndex=0;
 
 // RESET GAME
 function resetGame(){
-    birdY=canvas.height/4; // yukardan başlat
+    birdY=canvas.height/4; // başlangıç yukarıdan
     velocity=0; 
     pipes=[]; 
     score=0; 
@@ -88,9 +88,10 @@ function resetGame(){
 
 // ADD PIPE
 function addPipe(){
-    const gap=200; // pipe arası boşluk arttı
+    const gap=200; 
     const top = pipeOrder[pipeIndex % pipeOrder.length];
-    pipes.push({x:canvas.width, top:top, gap:gap});
+    // üst pipe ters çevrildi
+    pipes.push({x:canvas.width, top:top, gap:gap, inverted:true});
     pipeIndex++;
 }
 setInterval(()=>{if(running)addPipe();},2200);
@@ -166,7 +167,7 @@ function loop(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
     // BIRD
-    velocity+=0.38; birdY+=velocity; // hız biraz düşürüldü
+    velocity+=0.38; birdY+=velocity; 
     let frame=0;
     if(velocity<-2) frame=1;
     else if(velocity>2) frame=2;
@@ -174,21 +175,26 @@ function loop(){
 
     // PIPES
     pipes.forEach((p,i)=>{
-        p.x-=2.85; // pipe hızı %5 yavaşlatıldı
-        ctx.drawImage(pipeImg,p.x,0,90*1.3,p.top);
-        ctx.drawImage(pipeImg,p.x,p.top+p.gap,90*1.3,canvas.height);
+        p.x-=2.85; 
+        if(p.inverted){
+            ctx.save();
+            ctx.translate(p.x,p.top);
+            ctx.scale(1,-1); // üst pipe ters
+            ctx.drawImage(pipeImg,0,0,90*1.3,p.top);
+            ctx.restore();
+        } else {
+            ctx.drawImage(pipeImg,p.x,p.top+p.gap,90*1.3,canvas.height);
+        }
         // Çarpışma hitbox %30 düşürüldü
         if(80>p.x+20 && 80< p.x+90*1.3-20 && (birdY<p.top || birdY>p.top+p.gap)){
             ask();
         }
-        // Skor
         if(p.x + 90*1.3 < 80 && passedPipeIndex<i){score++; passedPipeIndex=i;}
     });
     pipes=pipes.filter(p=>p.x>-120);
 
     document.getElementById("score").textContent=score;
 
-    // Ölüm
     if(birdY>canvas.height || birdY<0){resetGame();}
 }
 loop();
