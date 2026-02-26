@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cyber Math Bird</title>
+<title> Math Project BySansiAsaf </title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Audiowide&display=swap');
 
@@ -18,7 +18,7 @@ canvas{position:fixed;top:0;left:0;}
 }
 #questionBox{
     position:fixed;top:10%;left:50%;transform:translateX(-50%);
-    width:500px;background:rgba(0,0,0,0.95);border-radius:15px;
+    width:550px;background:rgba(0,0,0,0.95);border-radius:15px;
     display:none;flex-direction:column;align-items:center;justify-content:center;
     gap:16px;text-align:center;padding:24px;z-index:10;
 }
@@ -27,7 +27,11 @@ canvas{position:fixed;top:0;left:0;}
     box-shadow:0 0 14px #c77dff;margin:6px 0;cursor:pointer;font-size:18px;text-align:left;
 }
 .choice:hover{background:#3c096c;}
-.solution{font-size:16px;opacity:.9;max-width:450px;margin-top:8px;white-space:pre-line;color:#ffcc00;}
+.solution{font-size:16px;opacity:.9;max-width:500px;margin-top:8px;white-space:pre-line;color:#ffcc00;text-align:left;}
+#nextBtn{
+    margin-top:12px;padding:12px 20px;background:gold;color:black;font-weight:bold;border:none;border-radius:10px;cursor:pointer;
+}
+#nextBtn:hover{background:#ffc700;}
 </style>
 </head>
 <body>
@@ -42,6 +46,7 @@ canvas{position:fixed;top:0;left:0;}
     <div id="qText"></div>
     <div id="choices"></div>
     <div id="solution" class="solution"></div>
+    <button id="nextBtn" style="display:none;">Başka soruya geç</button>
 </div>
 
 <canvas id="game"></canvas>
@@ -53,26 +58,21 @@ const canvas=document.getElementById("game");
 const ctx=canvas.getContext("2d");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
-
-window.addEventListener("resize",()=>{
-    canvas.width=window.innerWidth;
-    canvas.height=window.innerHeight;
-});
+window.addEventListener("resize",()=>{canvas.width=window.innerWidth; canvas.height=window.innerHeight;});
 
 // SPRITES
 const birdFrames=[new Image(),new Image(),new Image()];
 birdFrames[0].src="assets/1.png";
 birdFrames[1].src="assets/2.png";
 birdFrames[2].src="assets/3.png";
-
 const pipeBottom=new Image(); pipeBottom.src="assets/pipe.svg";
-const pipeTop=new Image(); pipeTop.src="assets/pipe1.svg"; // ters pipe
+const pipeTop=new Image(); pipeTop.src="assets/pipe1.svg";
 
 // GAME STATE
 let birdY=canvas.height/4, velocity=0, pipes=[], score=0, running=false;
 const SIZE=58;
 let pipeIndex=0;
-const pipeOrder = [100,150,180,120,160,200,140,170,130,190,110,160,175,125,180,145,155,165,185,195];
+const pipeOrder=[100,150,180,120,160,200,140,170,130,190,110,160,175,125,180,145,155,165,185,195];
 
 // INPUT
 function jump(){velocity=-9; document.getElementById("music").play().catch(()=>{});}
@@ -81,34 +81,35 @@ canvas.addEventListener("mousedown",jump);
 
 // RESET GAME
 function resetGame(){
-    birdY=canvas.height/4;
-    velocity=0;
-    pipes=[];
-    pipeIndex=0;
-    running=true;
+    birdY=canvas.height/4; velocity=0; pipes=[]; pipeIndex=0; running=true;
 }
 
 // ADD PIPE
-function addPipe(){
-    const gap=200;
-    const top = pipeOrder[pipeIndex % pipeOrder.length];
-    pipes.push({x:canvas.width, top:top, gap:gap, scored:false});
-    pipeIndex++;
-}
+function addPipe(){const gap=200; const top=pipeOrder[pipeIndex % pipeOrder.length]; pipes.push({x:canvas.width, top:top, gap:gap, scored:false}); pipeIndex++;}
 setInterval(()=>{if(running)addPipe();},2000);
 
-// QUESTIONS
-let questions = [
-    {q:"5 kalem 20 TL ise 8 kalem kaç TL? (Doğru Orantı)", correct:32, solution:"Doğru orantı formülü: 5/20 = 8/x → x = 32"},
-    {q:"3 işçi bir duvarı 9 günde örüyorsa 9 işçi kaç günde örer? (Ters Orantı)", correct:3, solution:"Ters orantı formülü: 3*9 = 9*x → x=3"},
-    {q:"Otobüs 90 km/s hızla 4 saatte gidiyor. Aynı yolu 60 km/s ile kaç saatte gider? (Ters Orantı)", correct:6, solution:"Ters orantı: 90*4 = 60*x → x=6"},
-    {q:"4 kg portakal 24 TL ise 7 kg kaç TL? (Doğru Orantı)", correct:42, solution:"Doğru orantı: 4/24 = 7/x → x=42"},
-    {q:"2 işçi 12 günde bitirirse 4 işçi kaç günde? (Ters Orantı)", correct:6, solution:"Ters orantı: 2*12 = 4*x → x=6"},
-    {q:"5 kg elma 35 TL ise 8 kg kaç TL? (Doğru Orantı)", correct:56, solution:"Doğru orantı: 5/35 = 8/x → x=56"},
-    {q:"3 işçi 15 günde iş bitirirse 5 işçi kaç günde? (Ters Orantı)", correct:9, solution:"Ters orantı: 3*15 = 5*x → x=9"}
+// 90+ SORU
+let questions=[
+    {q:"5 kalem 20 TL ise 8 kalem kaç TL? (Doğru Orantı)", correct:32, solution:"5/20=8/x → x=32"},
+    {q:"3 işçi bir duvarı 9 günde örüyorsa 9 işçi kaç günde örer? (Ters Orantı)", correct:3, solution:"3*9=9*x → x=3"},
+    {q:"Otobüs 90 km/s hızla 4 saatte gidiyor. Aynı yolu 60 km/s ile kaç saatte gider? (Ters Orantı)", correct:6, solution:"90*4=60*x → x=6"},
+    {q:"4 kg portakal 24 TL ise 7 kg kaç TL? (Doğru Orantı)", correct:42, solution:"4/24=7/x → x=42"},
+    {q:"2 işçi 12 günde bitirirse 4 işçi kaç günde? (Ters Orantı)", correct:6, solution:"2*12=4*x → x=6"},
+    {q:"5 kg elma 35 TL ise 8 kg kaç TL? (Doğru Orantı)", correct:56, solution:"5/35=8/x → x=56"},
+    {q:"3 işçi 15 günde iş bitirirse 5 işçi kaç günde? (Ters Orantı)", correct:9, solution:"3*15=5*x → x=9"}
 ];
 
-let remainingQuestions = [...questions];
+// 90 soruya tamamla rastgele üretim
+while(questions.length<90){
+    let a=Math.floor(Math.random()*10+2);
+    let b=Math.floor(Math.random()*10+2);
+    let c=Math.floor(Math.random()*10+2);
+    const type=Math.random()>0.5?"Doğru Orantı":"Ters Orantı";
+    const ans=type=="Doğru Orantı"?Math.round(b*a/c):Math.round(a*b/c);
+    questions.push({q:`${a} işçi ${b} günde yapıyorsa ${c} işçi kaç günde yapar? (${type})`, correct:ans, solution:type=="Doğru Orantı"?`Doğru orantı formülü: ${a}/${b} = ${c}/x → x=${ans}`:`Ters orantı formülü: ${a}*${b} = ${c}*x → x=${ans}`});
+}
+
+let remainingQuestions=[...questions];
 
 // ASK FUNCTION
 function ask(){
@@ -125,13 +126,10 @@ function ask(){
     document.getElementById("solution").textContent="";
     const ch=document.getElementById("choices");
     ch.innerHTML="";
+    document.getElementById("nextBtn").style.display="none";
 
-    // Şıkları hazırla
     let choices=[q.correct];
-    while(choices.length<4){
-        let rand=Math.floor(q.correct*0.5+Math.random()*q.correct*1.5);
-        if(!choices.includes(rand)) choices.push(rand);
-    }
+    while(choices.length<4){let rand=Math.floor(q.correct*0.5+Math.random()*q.correct*1.5); if(!choices.includes(rand)) choices.push(rand);}
     choices.sort(()=>Math.random()-0.5);
     const letters=["A)","B)","C)","D)"];
 
@@ -140,14 +138,22 @@ function ask(){
         d.className="choice";
         d.textContent=`${letters[i]} ${ans}`;
         d.onclick=()=>{
-            qb.style.display="none"; 
-            if(ans!==q.correct){ 
-                document.getElementById("solution").textContent=`Yanlış! Çözüm: ${q.solution}`;
+            if(ans===q.correct){
+                qb.style.display="none"; 
+                resetGame();
+            } else {
+                document.getElementById("solution").textContent=`Yanlış! Çözüm: ${q.solution}\n*Uyarı: Başka soruya geç*`;
+                document.getElementById("nextBtn").style.display="block";
             }
-            resetGame(); // oyun tekrar başlar
         };
         ch.appendChild(d);
     });
+}
+
+// NEXT BUTTON
+document.getElementById("nextBtn").onclick=function(){
+    document.getElementById("questionBox").style.display="none";
+    resetGame();
 }
 
 // INTRO
