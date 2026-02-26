@@ -4,60 +4,37 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cyber Math Bird</title>
-
 <style>
-html,body{
-    margin:0;
-    padding:0;
-    overflow:hidden;
-    background:black;
-    font-family:Arial;
-    color:white;
-}
-
-canvas{ position:fixed; inset:0; }
-
-#score{
-    position:fixed;
-    top:20px;
-    left:50%;
-    transform:translateX(-50%);
-    font-size:26px;
-    text-shadow:0 0 12px #c77dff;
-}
-
+html,body{margin:0;padding:0;overflow:hidden;font-family:Arial;background:black;color:white;}
+canvas{position:fixed;inset:0;}
+#score{position:fixed;top:20px;left:50%;transform:translateX(-50%);font-size:26px;text-shadow:0 0 12px #c77dff;}
 #questionBox{
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,.92);
-    display:none;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    gap:14px;
-    text-align:center;
-    padding:20px;
+    position:fixed;inset:0;background:rgba(0,0,0,.92);
+    display:none;flex-direction:column;align-items:center;justify-content:center;
+    gap:14px;text-align:center;padding:20px;
 }
-
 .choice{
-    background:#240046;
-    padding:12px;
-    border-radius:10px;
-    width:240px;
-    box-shadow:0 0 12px #c77dff;
+    background:#240046;padding:12px;border-radius:10px;width:240px;
+    box-shadow:0 0 12px #c77dff;margin:5px;cursor:pointer;
 }
-.solution{
-    font-size:14px;
-    opacity:.85;
-    max-width:320px;
-}
+.choice:hover{background:#3c096c;}
+.solution{font-size:14px;opacity:.85;max-width:320px;margin-top:8px;}
 </style>
 </head>
-
 <body>
 
-<div id="score">0</div>
+<!-- Video BG -->
+<video id="bgVideo" autoplay loop muted playsinline style="
+    position:fixed;
+    top:0; left:0;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    z-index:-1;">
+    <source src="assets/smol-stelle-honkai-star-rail.1920x1080.mp4" type="video/mp4">
+</video>
 
+<div id="score">0</div>
 <div id="questionBox">
     <div id="qText"></div>
     <div id="choices"></div>
@@ -68,89 +45,80 @@ canvas{ position:fixed; inset:0; }
 <audio id="music" src="assets/88.m4a" loop></audio>
 
 <script>
+// CANVAS SETUP
 const canvas=document.getElementById("game");
 const ctx=canvas.getContext("2d");
 resize(); window.onresize=resize;
 function resize(){ canvas.width=innerWidth; canvas.height=innerHeight; }
 
-const bg=new Image(); bg.src="assets/bg.svg";
-const pipeImg=new Image(); pipeImg.src="assets/pipe.svg";
-
-const birdFrames=[
-    new Image(),
-    new Image(),
-    new Image()
-];
+// SPRITES
+const birdFrames=[new Image(),new Image(),new Image()];
 birdFrames[0].src="assets/1.png";
 birdFrames[1].src="assets/2.png";
 birdFrames[2].src="assets/3.png";
 
+const pipeImg=new Image(); pipeImg.src="assets/pipe.svg";
+
+// GAME STATE
 let birdY=300, velocity=0, pipes=[], score=0, running=true;
 const SIZE=58;
 
+// INPUT
 function jump(){
     document.getElementById("music").play().catch(()=>{});
     velocity=-10;
 }
-
 canvas.addEventListener("touchstart",jump);
 canvas.addEventListener("mousedown",jump);
 
+// PIPE GENERATION
 function addPipe(){
     const top=Math.random()*(canvas.height-320)+40;
     pipes.push({x:canvas.width, top});
 }
 setInterval(addPipe,2000);
 
-function generateQuestion(){
-    const type=Math.random()>0.5?"dogru":"ters";
-    const a=Math.floor(Math.random()*9)+2;
-    const b=Math.floor(Math.random()*9)+2;
-    const c=Math.floor(Math.random()*9)+2;
+// MATHEMATICS QUESTIONS (ÖRNEK 90+) 
+const questions=[
+    {q:"5 kalem 20 TL ise 8 kalem kaç TL?", choices:["30","32","40"], correct:1, solution:"5 kalem 20 TL → 1 kalem 4 TL → 8 kalem 8×4=32 TL"},
+    {q:"3 işçi bir duvarı 9 günde örüyorsa 9 işçi kaç günde örer?", choices:["3","9","27"], correct:0, solution:"İşçi arttı → gün azalır: 3×9=27 → 9 işçi 27/9=3 gün"},
+    {q:"Otobüs 90 km/s hızla 4 saatte gidiyor. Aynı yolu 60 km/s ile kaç saatte gider?", choices:["4","6","8"], correct:1, solution:"90*4=360 km → 60 km/s → 360/60=6 saat"},
+    {q:"4 kg portakal 24 TL ise 7 kg kaç TL?", choices:["42","40","38"], correct:0, solution:"24/4=6 TL/kg → 7*6=42 TL"},
+    {q:"2 işçi 12 günde bitirirse 4 işçi kaç günde?", choices:["6","24","12"], correct:0, solution:"Ters orantı: işçi 2x→ gün yarı → 4 işçi 12/2=6 gün"},
+    {q:"Bir otobüs 90 km/s hızla 4 saatte gidiyor. Aynı yolu 60 km/s ile kaç saatte gider?", choices:["3","6","9"], correct:1, solution:"90*4=360 km → 60 km/s → 360/60=6 saat"},
+    {q:"5 kg elma 35 TL ise 8 kg kaç TL?", choices:["50","56","60"], correct:1, solution:"35/5=7 TL/kg → 8*7=56 TL"},
+    {q:"3 işçi 15 günde iş bitirirse 5 işçi kaç günde bitirir?", choices:["9","12","25"], correct:1, solution:"3*15=45 iş günü → 5 işçi 45/5=9 gün"},
+    {q:"6 kalem 18 TL ise 10 kalem kaç TL?", choices:["28","30","32"], correct:1, solution:"18/6=3 TL → 10*3=30 TL"},
+    {q:"9 işçi 6 günde iş bitiriyor, 3 işçi kaç günde bitirir?", choices:["12","18","6"], correct:1, solution:"Ters orantı: 9*6=54 → 3 işçi 54/3=18 gün"}
+];
 
-    if(type==="dogru"){
-        const result=(b*c)/a;
-        return {
-            q:`${a} işçi ${b} günde yapıyorsa ${c} işçi kaç günde yapar?`,
-            correct:result,
-            solution:`Doğru orantı: işçi artarsa süre azalır.\n(${b}×${a})/${c} = ${result}`
-        };
-    } else {
-        const result=(a*b)/c;
-        return {
-            q:`${a} musluk ${b} saatte doldurursa ${c} musluk kaç saatte doldurur?`,
-            correct:result,
-            solution:`Ters orantı: musluk artarsa süre azalır.\n(${a}×${b})/${c} = ${result}`
-        };
-    }
+// BİR 90+ soru ekleyecek şekilde çoğaltabilirsin...
+while(questions.length<90){
+    let a=Math.floor(Math.random()*10+2);
+    let b=Math.floor(Math.random()*10+2);
+    let c=Math.floor(Math.random()*10+2);
+    questions.push({q:`${a} işçi ${b} günde yapıyorsa ${c} işçi kaç günde yapar?`, choices:[b,a+c,a*b], correct:0, solution:`Doğru orantı: işçi artarsa süre azalır. (${b}×${a})/${c}=${Math.round(b*a/c)}`});
 }
 
+// ASK FUNCTION
 function ask(){
     running=false;
     const qb=document.getElementById("questionBox");
     qb.style.display="flex";
-    const data=generateQuestion();
-    document.getElementById("qText").textContent=data.q;
+    const q=questions[Math.floor(Math.random()*questions.length)];
+    document.getElementById("qText").textContent=q.q;
     document.getElementById("solution").textContent="";
-
     const ch=document.getElementById("choices");
     ch.innerHTML="";
-    const answers=[
-        Math.round(data.correct),
-        Math.round(data.correct*1.5),
-        Math.round(data.correct*0.5)
-    ].sort(()=>Math.random()-0.5);
-
-    answers.forEach(ans=>{
+    q.choices.forEach((ans,i)=>{
         const d=document.createElement("div");
         d.className="choice";
         d.textContent=ans;
         d.onclick=()=>{
-            if(ans===Math.round(data.correct)){
-                qb.style.display="none";
-                running=true;
+            if(i===q.correct){
+                qb.style.display="none"; running=true;
             } else {
-                document.getElementById("solution").textContent=data.solution;
+                document.getElementById("solution").textContent=q.solution;
                 score=0;
             }
         };
@@ -158,33 +126,40 @@ function ask(){
     });
 }
 
+// GAME LOOP
 function loop(){
     requestAnimationFrame(loop);
+    if(!running) return;
 
-    ctx.drawImage(bg,0,0,canvas.width,canvas.height);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
 
     velocity+=0.6;
     birdY+=velocity;
 
+    // Bird frame
     let frame=0;
     if(velocity<-2) frame=1;
     else if(velocity>2) frame=2;
-
     ctx.drawImage(birdFrames[frame],80,birdY,SIZE,SIZE);
 
+    // Pipes
     pipes.forEach(p=>{
         p.x-=3;
         ctx.drawImage(pipeImg,p.x,0,90,p.top);
         ctx.drawImage(pipeImg,p.x,p.top+170,90,canvas.height);
-
         if(80>p.x && 80<p.x+90){
             if(birdY<p.top || birdY>p.top+170) ask();
         }
     });
-
     pipes=pipes.filter(p=>p.x>-120);
+
+    // Score
+    score+=0.01;
+    document.getElementById("score").textContent=Math.floor(score);
 }
+setInterval(addPipe,2000);
 loop();
 </script>
+
 </body>
 </html>
