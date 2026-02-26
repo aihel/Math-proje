@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SansiAsaf MathProject</title>
+<title> --Math Project BySansiAsaf-- </title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Audiowide&display=swap');
 html,body{margin:0;padding:0;overflow:hidden;font-family:'Audiowide', sans-serif;background:black;color:white;}
@@ -40,8 +40,8 @@ canvas{position:fixed;top:0;left:0;}
 // CANVAS
 const canvas=document.getElementById("game");
 const ctx=canvas.getContext("2d");
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
 window.addEventListener("resize",()=>{canvas.width=window.innerWidth; canvas.height=window.innerHeight;});
 
 // SPRITES
@@ -70,20 +70,29 @@ function resetGame(){birdY=canvas.height/4; velocity=0; pipes=[]; pipeIndex=0; r
 function addPipe(){const gap=200; const top=pipeOrder[pipeIndex % pipeOrder.length]; pipes.push({x:canvas.width, top:top, gap:gap, scored:false}); pipeIndex++;}
 setInterval(()=>{if(running && !isAsking)addPipe();},2000);
 
-// LOAD QUESTIONS JSON
+// QUESTIONS
 let questions=[], remainingQuestions=[];
-fetch('assets/questions.json')
-.then(res=>res.json())
-.then(data=>{
-    questions=data;
-    while(questions.length<90){ // rastgele tamamla
+function generateQuestions(){
+    const baseQ=[
+        {q:"5 kalem 20 TL ise 8 kalem kaç TL? (Doğru Orantı)",correct:32,solution:"5/20 = 8/x → x=32"},
+        {q:"3 işçi bir duvarı 9 günde örüyorsa 9 işçi kaç günde örer? (Ters Orantı)",correct:3,solution:"3*9 = 9*x → x=3"},
+        {q:"Otobüs 90 km/s hızla 4 saatte gidiyor. Aynı yolu 60 km/s ile kaç saatte gider? (Ters Orantı)",correct:6,solution:"90*4 = 60*x → x=6"},
+        {q:"4 kg portakal 24 TL ise 7 kg kaç TL? (Doğru Orantı)",correct:42,solution:"4/24 = 7/x → x=42"},
+        {q:"2 işçi 12 günde bitirirse 4 işçi kaç günde? (Ters Orantı)",correct:6,solution:"2*12 = 4*x → x=6"},
+        {q:"5 kg elma 35 TL ise 8 kg kaç TL? (Doğru Orantı)",correct:56,solution:"5/35 = 8/x → x=56"},
+        {q:"3 işçi 15 günde iş bitirirse 5 işçi kaç günde? (Ters Orantı)",correct:9,solution:"3*15 = 5*x → x=9"}
+    ];
+    questions=[...baseQ];
+    while(questions.length<95){ // rastgele sorular
         let a=Math.floor(Math.random()*10+2), b=Math.floor(Math.random()*10+2), c=Math.floor(Math.random()*10+2);
         const type=Math.random()>0.5?"Doğru Orantı":"Ters Orantı";
         const ans=type=="Doğru Orantı"?Math.round(b*a/c):Math.round(a*b/c);
-        questions.push({q:`${a} işçi ${b} günde yapıyorsa ${c} işçi kaç günde yapar? (${type})`, correct:ans, solution:type=="Doğru Orantı"?`Doğru orantı formülü: ${a}/${b} = ${c}/x → x=${ans}`:`Ters orantı formülü: ${a}*${b} = ${c}*x → x=${ans}`});
+        const sol=type=="Doğru Orantı"?`Doğru orantı formülü: ${a}/${b} = ${c}/x → x=${ans}`:`Ters orantı formülü: ${a}*${b} = ${c}*x → x=${ans}`;
+        questions.push({q:`${a} işçi ${b} günde yapıyorsa ${c} işçi kaç günde yapar? (${type})`,correct:ans,solution:sol});
     }
     remainingQuestions=[...questions];
-});
+}
+generateQuestions();
 
 // ASK FUNCTION
 function ask(){
@@ -143,7 +152,6 @@ function loop(){
     requestAnimationFrame(loop);
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
-    // bird ve pipe hareket sadece soru sorulmadığında
     if(!isAsking){
         velocity+=0.38;
         birdY+=velocity;
@@ -173,7 +181,6 @@ function loop(){
             ask();
         }
     } else {
-        // soru sorulurken pozisyon sabit
         ctx.drawImage(birdFrames[0],80,birdY,SIZE,SIZE);
         pipes.forEach((p)=>{
             ctx.drawImage(pipeTop,p.x,p.top-520*1.1,110*1.1,520*1.1);
