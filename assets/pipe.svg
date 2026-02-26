@@ -1,0 +1,32 @@
+<svg width="140" height="400" viewBox="0 0 140 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="pipeGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c77dff"/>
+      <stop offset="100%" stop-color="#240046"/>
+    </linearGradient>
+
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="5" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Glow -->
+  <rect x="38" y="0" width="64" height="400" rx="22"
+        fill="#9d4edd" opacity="0.25" filter="url(#glow)"/>
+
+  <!-- Body -->
+  <rect x="44" y="0" width="52" height="400" rx="16"
+        fill="url(#pipeGrad)"/>
+
+  <!-- Cap -->
+  <rect x="26" y="0" width="88" height="40" rx="12"
+        fill="#7b2cbf"/>
+
+  <!-- Highlight -->
+  <rect x="52" y="8" width="8" height="380" rx="4"
+        fill="white" opacity="0.25"/>
+</svg>
