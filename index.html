@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MathProject [BySansiAsaf]</title>
+<title>SansiAsaf MathProject</title>
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap');
@@ -41,24 +41,30 @@ align-items:center;
 justify-content:center;
 background:black;
 font-size:54px;
-z-index:20;
+z-index:50;
 transition:opacity 1s;
+text-align:center;
 }
 
 #questionBox{
 position:fixed;
-top:8%;
-left:50%;
-transform:translateX(-50%);
+inset:0;
+display:none;
+align-items:center;
+justify-content:center;
+z-index:30;
+}
+
+#questionInner{
 width:600px;
 background:rgba(0,0,0,0.95);
-padding:25px;
+padding:30px;
 border-radius:20px;
-display:none;
+box-shadow:0 0 40px #c77dff;
+display:flex;
 flex-direction:column;
 gap:15px;
-z-index:10;
-box-shadow:0 0 40px #c77dff;
+text-align:center;
 }
 
 .choice{
@@ -95,66 +101,71 @@ display:none;
 <div id="score">0</div>
 
 <div id="questionBox">
-<div id="qText"></div>
-<div id="choices"></div>
-<div id="solution"></div>
-<button id="nextBtn">Başka soruya geç</button>
+  <div id="questionInner">
+    <div id="qText"></div>
+    <div id="choices"></div>
+    <div id="solution"></div>
+    <button id="nextBtn">Başka soruya geç</button>
+  </div>
 </div>
 
 <canvas id="game"></canvas>
 
 <script>
-/* ============================
-   CANVAS SETUP
-============================ */
 
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+/* ================= CANVAS ================= */
+
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
 
 function resize(){
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
 }
 resize();
 window.addEventListener("resize",resize);
 
-/* ============================
-   GAME STATE
-============================ */
+/* ================= ASSETS ================= */
 
-const STATE = {
-PLAYING:0,
-QUESTION:1
-};
+const birdFrames=[new Image(),new Image(),new Image()];
+birdFrames[0].src="assets/1.png";
+birdFrames[1].src="assets/2.png";
+birdFrames[2].src="assets/3.png";
 
-let gameState = STATE.PLAYING;
+const pipeBottom=new Image();
+pipeBottom.src="assets/pipe.svg";
 
-let bird = {
-x:80,
+const pipeTop=new Image();
+pipeTop.src="assets/pipe1.svg";
+
+/* ================= GAME STATE ================= */
+
+const STATE={INTRO:0,PLAYING:1,QUESTION:2};
+let gameState=STATE.INTRO;
+
+let bird={
+x:100,
 y:canvas.height/3,
 vel:0,
-size:55
+size:60
 };
 
-let gravity = 900;
-let jumpForce = -350;
+let gravity=900;
+let jumpForce=-350;
 
-let pipes = [];
-let pipeGap = 220;
-let pipeWidth = 110;
-let pipeSpawnTimer = 0;
-let pipeSpawnDelay = 1.8;
+let pipes=[];
+let pipeGap=230;
+let pipeWidth=120;
+let pipeSpawnTimer=0;
+let pipeSpawnDelay=1.8;
 
-let score = 0;
+let score=0;
+let lastTime=0;
 
-let lastTime = 0;
+/* ================= QUESTIONS ================= */
 
-/* ============================
-   QUESTION SYSTEM
-============================ */
-
-let questions = [];
-let remainingQuestions = [];
+let questions=[];
+let remainingQuestions=[];
 
 function generateQuestions(){
 for(let i=0;i<110;i++){
@@ -166,30 +177,28 @@ let type=Math.random()>0.5?"Doğru Orantı":"Ters Orantı";
 let answer;
 
 if(type==="Doğru Orantı"){
-answer = Math.round((b*c)/a);
+answer=Math.round((b*c)/a);
 }else{
-answer = Math.round((a*b)/c);
+answer=Math.round((a*b)/c);
 }
 
 questions.push({
 q:`${a} işçi ${b} günde iş bitiriyor. ${c} işçi kaç günde bitirir? (${type})`,
 correct:answer,
-solution: type==="Doğru Orantı"
-? `Doğru Orantı: ${a}/${b} = ${c}/x\nx = ${answer}`
-: `Ters Orantı: ${a}×${b} = ${c}×x\nx = ${answer}`
+solution:type==="Doğru Orantı"
+?`Doğru Orantı:\n${a}/${b} = ${c}/x\nx = ${answer}`
+:`Ters Orantı:\n${a}×${b} = ${c}×x\nx = ${answer}`
 });
 }
 
-remainingQuestions = [...questions];
+remainingQuestions=[...questions];
 }
 generateQuestions();
 
-function showQuestion(){
-if(remainingQuestions.length===0){
-remainingQuestions=[...questions];
-}
+/* ================= QUESTION LOGIC ================= */
 
-gameState = STATE.QUESTION;
+function showQuestion(){
+gameState=STATE.QUESTION;
 
 const box=document.getElementById("questionBox");
 box.style.display="flex";
@@ -206,16 +215,14 @@ const choicesDiv=document.getElementById("choices");
 choicesDiv.innerHTML="";
 
 let answers=[q.correct];
-
 while(answers.length<4){
 let fake=q.correct+Math.floor(Math.random()*20-10);
-if(fake!==q.correct && fake>0 && !answers.includes(fake)){
+if(fake>0 && !answers.includes(fake)){
 answers.push(fake);
 }
 }
 
 answers.sort(()=>Math.random()-0.5);
-
 const letters=["A)","B)","C)","D)"];
 
 answers.forEach((ans,i)=>{
@@ -239,12 +246,10 @@ choicesDiv.appendChild(div);
 
 document.getElementById("nextBtn").onclick=()=>{
 document.getElementById("questionBox").style.display="none";
-showQuestion(); // gerçekten yeni soru
+showQuestion();
 };
 
-/* ============================
-   GAME RESET
-============================ */
+/* ================= RESET ================= */
 
 function resetGame(){
 bird.y=canvas.height/3;
@@ -253,38 +258,33 @@ pipes=[];
 score=0;
 }
 
-/* ============================
-   INPUT
-============================ */
+/* ================= INPUT ================= */
 
 function jump(){
 if(gameState===STATE.PLAYING){
-bird.vel = jumpForce;
+bird.vel=jumpForce;
 }
 }
 window.addEventListener("mousedown",jump);
 window.addEventListener("touchstart",jump);
 
-/* ============================
-   GAME LOOP (DELTA TIME)
-============================ */
+/* ================= GAME LOOP ================= */
 
-function gameLoop(timestamp){
-let delta=(timestamp-lastTime)/1000;
-lastTime=timestamp;
+function loop(time){
+let dt=(time-lastTime)/1000;
+lastTime=time;
 
-update(delta);
+update(dt);
 draw();
 
-requestAnimationFrame(gameLoop);
+requestAnimationFrame(loop);
 }
 
 function update(dt){
-
 if(gameState!==STATE.PLAYING) return;
 
-bird.vel += gravity*dt;
-bird.y += bird.vel*dt;
+bird.vel+=gravity*dt;
+bird.y+=bird.vel*dt;
 
 pipeSpawnTimer+=dt;
 if(pipeSpawnTimer>pipeSpawnDelay){
@@ -313,7 +313,7 @@ showQuestion();
 }
 
 function spawnPipe(){
-let topHeight=Math.random()*(canvas.height-300)+50;
+let topHeight=Math.random()*(canvas.height-350)+50;
 pipes.push({
 x:canvas.width,
 top:topHeight,
@@ -331,30 +331,34 @@ bird.x+bird.size > p.x &&
 function draw(){
 ctx.clearRect(0,0,canvas.width,canvas.height);
 
-ctx.fillStyle="#c77dff";
-ctx.fillRect(bird.x,bird.y,bird.size,bird.size);
+if(gameState!==STATE.INTRO){
 
-ctx.fillStyle="#3a0ca3";
+let frame=Math.floor(Date.now()/150)%3;
+ctx.drawImage(birdFrames[frame],bird.x,bird.y,bird.size,bird.size);
+
 pipes.forEach(p=>{
-ctx.fillRect(p.x,0,pipeWidth,p.top);
-ctx.fillRect(p.x,p.bottom,pipeWidth,canvas.height-p.bottom);
+ctx.drawImage(pipeTop,p.x,p.top-500,pipeWidth,500);
+ctx.drawImage(pipeBottom,p.x,p.bottom,pipeWidth,500);
 });
+}
 
 document.getElementById("score").textContent=score;
 }
 
-/* ============================
-   INTRO ANIMATION
-============================ */
+/* ================= INTRO ================= */
 
-setTimeout(()=>{document.getElementById("intro").textContent="Tarafından Geliştirildi";},2000);
+setTimeout(()=>{document.getElementById("intro").textContent="Tarafından gelistirildi";},2000);
 setTimeout(()=>{document.getElementById("intro").textContent="Matematik Projesi";},4000);
 setTimeout(()=>{
 document.getElementById("intro").style.opacity=0;
-setTimeout(()=>{document.getElementById("intro").style.display="none";},1000);
+setTimeout(()=>{
+document.getElementById("intro").style.display="none";
+gameState=STATE.PLAYING; // oyun burada başlıyor
+},1000);
 },6000);
 
-requestAnimationFrame(gameLoop);
+requestAnimationFrame(loop);
+
 </script>
 </body>
 </html>
