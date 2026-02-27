@@ -3,194 +3,358 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title> --Math Project BySansiAsaf-- </title>
+<title>MathProject [BySansiAsaf]</title>
+
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Audiowide&display=swap');
-html,body{margin:0;padding:0;overflow:hidden;font-family:'Audiowide', sans-serif;background:black;color:white;}
-canvas{position:fixed;top:0;left:0;}
-#score{position:fixed;top:20px;left:50%;transform:translateX(-50%);font-size:35px;text-shadow:0 0 14px #c77dff;z-index:5;}
-#intro{position:fixed;inset:0;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:52px;color:#c77dff;text-shadow:0 0 20px #fff;z-index:15;opacity:1;transition:opacity 1s ease;text-align:center;}
-#questionBox{position:fixed;top:10%;left:50%;transform:translateX(-50%);width:550px;background:rgba(0,0,0,0.95);border-radius:15px;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:24px;z-index:10;}
-.choice{background:#240046;padding:16px;border-radius:12px;width:100%;box-shadow:0 0 14px #c77dff;margin:6px 0;cursor:pointer;font-size:18px;text-align:left;}
-.choice:hover{background:#3c096c;}
-.solution{font-size:16px;opacity:.9;max-width:500px;margin-top:8px;white-space:pre-line;color:#ffcc00;text-align:left;}
-#nextBtn{margin-top:12px;padding:12px 20px;background:gold;color:black;font-weight:bold;border:none;border-radius:10px;cursor:pointer;}
-#nextBtn:hover{background:#ffc700;}
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap');
+
+html,body{
+margin:0;
+padding:0;
+overflow:hidden;
+background:black;
+font-family:'Orbitron',sans-serif;
+color:white;
+}
+
+canvas{
+position:fixed;
+top:0;
+left:0;
+}
+
+#score{
+position:fixed;
+top:20px;
+left:50%;
+transform:translateX(-50%);
+font-size:36px;
+z-index:5;
+text-shadow:0 0 15px #c77dff;
+}
+
+#intro{
+position:fixed;
+inset:0;
+display:flex;
+align-items:center;
+justify-content:center;
+background:black;
+font-size:54px;
+z-index:20;
+transition:opacity 1s;
+}
+
+#questionBox{
+position:fixed;
+top:8%;
+left:50%;
+transform:translateX(-50%);
+width:600px;
+background:rgba(0,0,0,0.95);
+padding:25px;
+border-radius:20px;
+display:none;
+flex-direction:column;
+gap:15px;
+z-index:10;
+box-shadow:0 0 40px #c77dff;
+}
+
+.choice{
+background:#240046;
+padding:14px;
+border-radius:12px;
+cursor:pointer;
+transition:.2s;
+}
+
+.choice:hover{
+background:#3c096c;
+}
+
+#solution{
+color:#ffd60a;
+white-space:pre-line;
+}
+
+#nextBtn{
+background:gold;
+border:none;
+padding:12px;
+border-radius:12px;
+font-weight:bold;
+cursor:pointer;
+display:none;
+}
 </style>
 </head>
 <body>
 
-<video id="bgVideo" autoplay loop muted playsinline style="position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:-1;">
-    <source src="assets/smol-stelle-honkai-star-rail.1920x1080.mp4" type="video/mp4">
-</video>
-
 <div id="intro">Omer Asaf</div>
 <div id="score">0</div>
+
 <div id="questionBox">
-    <div id="qText"></div>
-    <div id="choices"></div>
-    <div id="solution" class="solution"></div>
-    <button id="nextBtn" style="display:none;">Başka soruya geç</button>
+<div id="qText"></div>
+<div id="choices"></div>
+<div id="solution"></div>
+<button id="nextBtn">Başka soruya geç</button>
 </div>
 
 <canvas id="game"></canvas>
-<audio id="music" src="assets/88.m4a" loop></audio>
 
 <script>
-// CANVAS
-const canvas=document.getElementById("game");
-const ctx=canvas.getContext("2d");
-canvas.width=window.innerWidth;
-canvas.height=window.innerHeight;
-window.addEventListener("resize",()=>{canvas.width=window.innerWidth; canvas.height=window.innerHeight;});
+/* ============================
+   CANVAS SETUP
+============================ */
 
-// SPRITES
-const birdFrames=[new Image(),new Image(),new Image()];
-birdFrames[0].src="assets/1.png";
-birdFrames[1].src="assets/2.png";
-birdFrames[2].src="assets/3.png";
-const pipeBottom=new Image(); pipeBottom.src="assets/pipe.svg";
-const pipeTop=new Image(); pipeTop.src="assets/pipe1.svg";
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
 
-// GAME STATE
-let birdY=canvas.height/4, velocity=0, pipes=[], score=0, pipeIndex=0;
-let running=true, isAsking=false;
-const SIZE=58;
-const pipeOrder=[100,150,180,120,160,200,140,170,130,190,110,160,175,125,180,145,155,165,185,195];
+function resize(){
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener("resize",resize);
 
-// INPUT
-function jump(){velocity=-9; document.getElementById("music").play().catch(()=>{});}
-canvas.addEventListener("touchstart",jump);
-canvas.addEventListener("mousedown",jump);
+/* ============================
+   GAME STATE
+============================ */
 
-// RESET GAME
-function resetGame(){birdY=canvas.height/4; velocity=0; pipes=[]; pipeIndex=0; running=true;}
+const STATE = {
+PLAYING:0,
+QUESTION:1
+};
 
-// ADD PIPE
-function addPipe(){const gap=200; const top=pipeOrder[pipeIndex % pipeOrder.length]; pipes.push({x:canvas.width, top:top, gap:gap, scored:false}); pipeIndex++;}
-setInterval(()=>{if(running && !isAsking)addPipe();},2000);
+let gameState = STATE.PLAYING;
 
-// QUESTIONS
-let questions=[], remainingQuestions=[];
+let bird = {
+x:80,
+y:canvas.height/3,
+vel:0,
+size:55
+};
+
+let gravity = 900;
+let jumpForce = -350;
+
+let pipes = [];
+let pipeGap = 220;
+let pipeWidth = 110;
+let pipeSpawnTimer = 0;
+let pipeSpawnDelay = 1.8;
+
+let score = 0;
+
+let lastTime = 0;
+
+/* ============================
+   QUESTION SYSTEM
+============================ */
+
+let questions = [];
+let remainingQuestions = [];
+
 function generateQuestions(){
-    const baseQ=[
-        {q:"5 kalem 20 TL ise 8 kalem kaç TL? (Doğru Orantı)",correct:32,solution:"5/20 = 8/x → x=32"},
-        {q:"3 işçi bir duvarı 9 günde örüyorsa 9 işçi kaç günde örer? (Ters Orantı)",correct:3,solution:"3*9 = 9*x → x=3"},
-        {q:"Otobüs 90 km/s hızla 4 saatte gidiyor. Aynı yolu 60 km/s ile kaç saatte gider? (Ters Orantı)",correct:6,solution:"90*4 = 60*x → x=6"},
-        {q:"4 kg portakal 24 TL ise 7 kg kaç TL? (Doğru Orantı)",correct:42,solution:"4/24 = 7/x → x=42"},
-        {q:"2 işçi 12 günde bitirirse 4 işçi kaç günde? (Ters Orantı)",correct:6,solution:"2*12 = 4*x → x=6"},
-        {q:"5 kg elma 35 TL ise 8 kg kaç TL? (Doğru Orantı)",correct:56,solution:"5/35 = 8/x → x=56"},
-        {q:"3 işçi 15 günde iş bitirirse 5 işçi kaç günde? (Ters Orantı)",correct:9,solution:"3*15 = 5*x → x=9"}
-    ];
-    questions=[...baseQ];
-    while(questions.length<95){ // rastgele sorular
-        let a=Math.floor(Math.random()*10+2), b=Math.floor(Math.random()*10+2), c=Math.floor(Math.random()*10+2);
-        const type=Math.random()>0.5?"Doğru Orantı":"Ters Orantı";
-        const ans=type=="Doğru Orantı"?Math.round(b*a/c):Math.round(a*b/c);
-        const sol=type=="Doğru Orantı"?`Doğru orantı formülü: ${a}/${b} = ${c}/x → x=${ans}`:`Ters orantı formülü: ${a}*${b} = ${c}*x → x=${ans}`;
-        questions.push({q:`${a} işçi ${b} günde yapıyorsa ${c} işçi kaç günde yapar? (${type})`,correct:ans,solution:sol});
-    }
-    remainingQuestions=[...questions];
+for(let i=0;i<110;i++){
+let a=Math.floor(Math.random()*9+2);
+let b=Math.floor(Math.random()*9+2);
+let c=Math.floor(Math.random()*9+2);
+
+let type=Math.random()>0.5?"Doğru Orantı":"Ters Orantı";
+let answer;
+
+if(type==="Doğru Orantı"){
+answer = Math.round((b*c)/a);
+}else{
+answer = Math.round((a*b)/c);
+}
+
+questions.push({
+q:`${a} işçi ${b} günde iş bitiriyor. ${c} işçi kaç günde bitirir? (${type})`,
+correct:answer,
+solution: type==="Doğru Orantı"
+? `Doğru Orantı: ${a}/${b} = ${c}/x\nx = ${answer}`
+: `Ters Orantı: ${a}×${b} = ${c}×x\nx = ${answer}`
+});
+}
+
+remainingQuestions = [...questions];
 }
 generateQuestions();
 
-// ASK FUNCTION
-function ask(){
-    if(remainingQuestions.length===0){alert("Tüm sorular tamamlandı!"); resetGame(); return;}
-    isAsking=true;
-    const qb=document.getElementById("questionBox");
-    qb.style.display="flex";
-    
-    const idx=Math.floor(Math.random()*remainingQuestions.length);
-    const q=remainingQuestions[idx];
-    remainingQuestions.splice(idx,1);
-    
-    document.getElementById("qText").textContent=q.q;
-    document.getElementById("solution").textContent="";
-    const ch=document.getElementById("choices");
-    ch.innerHTML="";
-    document.getElementById("nextBtn").style.display="none";
-
-    let choices=[q.correct];
-    while(choices.length<4){let rand=Math.floor(q.correct*0.5+Math.random()*q.correct*1.5); if(!choices.includes(rand)) choices.push(rand);}
-    choices.sort(()=>Math.random()-0.5);
-    const letters=["A)","B)","C)","D)"];
-
-    choices.forEach((ans,i)=>{
-        const d=document.createElement("div");
-        d.className="choice";
-        d.textContent=`${letters[i]} ${ans}`;
-        d.onclick=()=>{
-            if(ans===q.correct){
-                qb.style.display="none"; 
-                isAsking=false;
-                resetGame();
-            } else {
-                document.getElementById("solution").textContent=`Yanlış! Çözüm: ${q.solution}\n*Uyarı: Başka soruya geç*`;
-                document.getElementById("nextBtn").style.display="block";
-            }
-        };
-        ch.appendChild(d);
-    });
+function showQuestion(){
+if(remainingQuestions.length===0){
+remainingQuestions=[...questions];
 }
 
-// NEXT BUTTON
-document.getElementById("nextBtn").onclick=function(){
-    document.getElementById("questionBox").style.display="none";
-    isAsking=false;
-    resetGame();
+gameState = STATE.QUESTION;
+
+const box=document.getElementById("questionBox");
+box.style.display="flex";
+
+const index=Math.floor(Math.random()*remainingQuestions.length);
+const q=remainingQuestions[index];
+remainingQuestions.splice(index,1);
+
+document.getElementById("qText").textContent=q.q;
+document.getElementById("solution").textContent="";
+document.getElementById("nextBtn").style.display="none";
+
+const choicesDiv=document.getElementById("choices");
+choicesDiv.innerHTML="";
+
+let answers=[q.correct];
+
+while(answers.length<4){
+let fake=q.correct+Math.floor(Math.random()*20-10);
+if(fake!==q.correct && fake>0 && !answers.includes(fake)){
+answers.push(fake);
+}
 }
 
-// INTRO
-const intro=document.getElementById("intro");
-setTimeout(()=>{intro.textContent="Tarafından Geliştirildi";},2000);
-setTimeout(()=>{intro.textContent="Matamatik Projesi";},4000);
-setTimeout(()=>{intro.style.opacity=0; setTimeout(()=>{intro.style.display="none"; running=true;},800);},6000);
+answers.sort(()=>Math.random()-0.5);
 
-// GAME LOOP
-function loop(){
-    requestAnimationFrame(loop);
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+const letters=["A)","B)","C)","D)"];
 
-    if(!isAsking){
-        velocity+=0.38;
-        birdY+=velocity;
-
-        let frame=0;
-        if(velocity<-2) frame=1;
-        else if(velocity>2) frame=2;
-        ctx.drawImage(birdFrames[frame],80,birdY,SIZE,SIZE);
-
-        pipes.forEach((p)=>{
-            p.x-=2.85;
-            ctx.drawImage(pipeTop,p.x,p.top-520*1.1,110*1.1,520*1.1);
-            ctx.drawImage(pipeBottom,p.x,p.top+p.gap,110*1.1,520*1.1);
-
-            if(80>p.x+20 && 80< p.x+110*1.1-20 && (birdY<p.top || birdY>p.top+p.gap)){
-                ask();
-            }
-
-            if(!p.scored && p.x + 110*1.1/2 < 80){
-                score++;
-                p.scored=true;
-            }
-        });
-        pipes=pipes.filter(p=>p.x>-140);
-
-        if(birdY+SIZE>canvas.height || birdY<0){
-            ask();
-        }
-    } else {
-        ctx.drawImage(birdFrames[0],80,birdY,SIZE,SIZE);
-        pipes.forEach((p)=>{
-            ctx.drawImage(pipeTop,p.x,p.top-520*1.1,110*1.1,520*1.1);
-            ctx.drawImage(pipeBottom,p.x,p.top+p.gap,110*1.1,520*1.1);
-        });
-    }
-
-    document.getElementById("score").textContent=score;
+answers.forEach((ans,i)=>{
+let div=document.createElement("div");
+div.className="choice";
+div.textContent=`${letters[i]} ${ans}`;
+div.onclick=()=>{
+if(ans===q.correct){
+box.style.display="none";
+resetGame();
+gameState=STATE.PLAYING;
+}else{
+document.getElementById("solution").textContent=
+`Yanlış!\n\n${q.solution}\n\n*Uyarı: Başka soruya geç*`;
+document.getElementById("nextBtn").style.display="block";
 }
-loop();
+};
+choicesDiv.appendChild(div);
+});
+}
+
+document.getElementById("nextBtn").onclick=()=>{
+document.getElementById("questionBox").style.display="none";
+showQuestion(); // gerçekten yeni soru
+};
+
+/* ============================
+   GAME RESET
+============================ */
+
+function resetGame(){
+bird.y=canvas.height/3;
+bird.vel=0;
+pipes=[];
+score=0;
+}
+
+/* ============================
+   INPUT
+============================ */
+
+function jump(){
+if(gameState===STATE.PLAYING){
+bird.vel = jumpForce;
+}
+}
+window.addEventListener("mousedown",jump);
+window.addEventListener("touchstart",jump);
+
+/* ============================
+   GAME LOOP (DELTA TIME)
+============================ */
+
+function gameLoop(timestamp){
+let delta=(timestamp-lastTime)/1000;
+lastTime=timestamp;
+
+update(delta);
+draw();
+
+requestAnimationFrame(gameLoop);
+}
+
+function update(dt){
+
+if(gameState!==STATE.PLAYING) return;
+
+bird.vel += gravity*dt;
+bird.y += bird.vel*dt;
+
+pipeSpawnTimer+=dt;
+if(pipeSpawnTimer>pipeSpawnDelay){
+pipeSpawnTimer=0;
+spawnPipe();
+}
+
+pipes.forEach(p=>{
+p.x-=250*dt;
+
+if(!p.scored && p.x+pipeWidth<bird.x){
+p.scored=true;
+score++;
+}
+
+if(collide(p)){
+showQuestion();
+}
+});
+
+pipes=pipes.filter(p=>p.x>-pipeWidth);
+
+if(bird.y<0 || bird.y+bird.size>canvas.height){
+showQuestion();
+}
+}
+
+function spawnPipe(){
+let topHeight=Math.random()*(canvas.height-300)+50;
+pipes.push({
+x:canvas.width,
+top:topHeight,
+bottom:topHeight+pipeGap,
+scored:false
+});
+}
+
+function collide(p){
+return bird.x < p.x+pipeWidth &&
+bird.x+bird.size > p.x &&
+(bird.y < p.top || bird.y+bird.size > p.bottom);
+}
+
+function draw(){
+ctx.clearRect(0,0,canvas.width,canvas.height);
+
+ctx.fillStyle="#c77dff";
+ctx.fillRect(bird.x,bird.y,bird.size,bird.size);
+
+ctx.fillStyle="#3a0ca3";
+pipes.forEach(p=>{
+ctx.fillRect(p.x,0,pipeWidth,p.top);
+ctx.fillRect(p.x,p.bottom,pipeWidth,canvas.height-p.bottom);
+});
+
+document.getElementById("score").textContent=score;
+}
+
+/* ============================
+   INTRO ANIMATION
+============================ */
+
+setTimeout(()=>{document.getElementById("intro").textContent="Tarafından Geliştirildi";},2000);
+setTimeout(()=>{document.getElementById("intro").textContent="Matematik Projesi";},4000);
+setTimeout(()=>{
+document.getElementById("intro").style.opacity=0;
+setTimeout(()=>{document.getElementById("intro").style.display="none";},1000);
+},6000);
+
+requestAnimationFrame(gameLoop);
 </script>
 </body>
 </html>
